@@ -1,0 +1,280 @@
+{
+  "version": "0.1.0",
+  "name": "candidate_staking",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        {
+          "name": "baseAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowWalletState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "jobAdId",
+          "type": "string"
+        },
+        {
+          "name": "applicationId",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "stake",
+      "accounts": [
+        {
+          "name": "baseAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "generalAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "applicationAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "generalProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "applicationProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "jobProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "escrowWalletState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "walletToWithdrawFrom",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "jobAdId",
+          "type": "string"
+        },
+        {
+          "name": "applicationId",
+          "type": "string"
+        },
+        {
+          "name": "baseBump",
+          "type": "u8"
+        },
+        {
+          "name": "generalBump",
+          "type": "u8"
+        },
+        {
+          "name": "applicationBump",
+          "type": "u8"
+        },
+        {
+          "name": "jobBump",
+          "type": "u8"
+        },
+        {
+          "name": "walletBump",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "unstake",
+      "accounts": [
+        {
+          "name": "baseAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "applicationAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "applicationProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "escrowWalletState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "walletToDepositTo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "baseBump",
+          "type": "u8"
+        },
+        {
+          "name": "applicationBump",
+          "type": "u8"
+        },
+        {
+          "name": "walletBump",
+          "type": "u8"
+        },
+        {
+          "name": "applicationId",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CandidateParameter",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "stakedAmount",
+            "type": "u32"
+          },
+          {
+            "name": "rewardAmount",
+            "type": "u32"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidToken",
+      "msg": "You can deposit only USDC token. "
+    },
+    {
+      "code": 6001,
+      "name": "MaxAmountExceeded",
+      "msg": "The stake amount is exceeded. "
+    },
+    {
+      "code": 6002,
+      "name": "StatusPending",
+      "msg": "The application status is still under consideration"
+    },
+    {
+      "code": 6003,
+      "name": "SelectedButCantTransfer",
+      "msg": "The staked application is selected but u would have to wait before u can withdraw"
+    }
+  ],
+  "metadata": {
+    "address": "BF1jhf5eA5X1Tu8JByv8htnkUaG6WzmYEMLx2kbZ7YiW"
+  }
+}

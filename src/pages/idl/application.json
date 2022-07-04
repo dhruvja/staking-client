@@ -1,0 +1,150 @@
+{
+  "version": "0.1.0",
+  "name": "application",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        {
+          "name": "baseAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "generalAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "generalProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "jobAdId",
+          "type": "string"
+        },
+        {
+          "name": "applicationId",
+          "type": "string"
+        },
+        {
+          "name": "generalBump",
+          "type": "u8"
+        },
+        {
+          "name": "maxAllowedStake",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "updateStatus",
+      "accounts": [
+        {
+          "name": "baseAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "applicationId",
+          "type": "string"
+        },
+        {
+          "name": "applicationBump",
+          "type": "u8"
+        },
+        {
+          "name": "status",
+          "type": {
+            "defined": "JobStatus"
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ApplicationParameter",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": "JobStatus"
+            }
+          },
+          {
+            "name": "stakedAmount",
+            "type": "u32"
+          },
+          {
+            "name": "maxAllowedStaked",
+            "type": "u32"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "JobStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Rejected"
+          },
+          {
+            "name": "SelectedButCantWithdraw"
+          },
+          {
+            "name": "Selected"
+          },
+          {
+            "name": "Pending"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidAuthority",
+      "msg": "You dont have the authority to create the application"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidStatus",
+      "msg": "Invalid status value"
+    }
+  ],
+  "metadata": {
+    "address": "Fxe3yzwDaKnK8e2Mj4CqrK2YvTbFaUhqmnuTyH1dJWcX"
+  }
+}
