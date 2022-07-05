@@ -6,7 +6,9 @@ Note: The buttons which are in grey color are functions which can only be called
 
 ## How to use
 
-- Click on the application Id ( the one in blue) to start staking.
+- Click on the application Id ( the one in blue) to start staking. 
+- You will get a message saying if the application or job is initialized. 
+- You can only stake on the application if both the job and application is initialized. So choose an application which is initialized.
 - There is a mint button where u can mint tokens by specifying the value.
 - After minting tokens, u can start staking by specifying the amount of tokens to stake and clicking the stake button.
 - Voila, you have successfully staked on the application.
