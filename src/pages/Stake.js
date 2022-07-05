@@ -608,10 +608,10 @@ function Stake() {
           </Button>
           <Button onClick={updateTokenMint}>Update Token Mint</Button>
           <br /> <br />
-          <Button onClick={createJob} primary>
+          <Button onClick={createJob}>
             Create Job
           </Button>
-          <Button onClick={createApplication} secondary>
+          <Button onClick={createApplication}>
             Create Application
           </Button>
           <br /><br />
@@ -660,6 +660,9 @@ function Stake() {
             <Message color="teal">
               <Message.Header>Total Tokens: {totalTokens} </Message.Header>
             </Message>
+            {!selectedPresent && (<Message color="teal">
+              <Message.Header>Please click the application Id(in blue) below to start staking </Message.Header>
+            </Message>) }
             {selectedPresent && (
               <Message color="teal">
                 <Message.Header>
@@ -690,10 +693,12 @@ function Stake() {
                   </Message.Header>
                 </Message>
               ))}
+              <Header as="h2">Jobs and applications</Header>
+              <Header as="h4">Click on the application id below to start staking</Header>
             {data.jobs.map((job, index) => {
               return (
                 <List ordered>
-                  <List.Header as="h4">{job.id}</List.Header>
+                  <List.Header as="h4">Job Id: {job.id}</List.Header>
                   {job.applicants.map((application, indexs) => {
                     return (
                       <List.Item
