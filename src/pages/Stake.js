@@ -16,6 +16,7 @@ import {
   Message,
   Dropdown,
   Label,
+  Radio,
 } from "semantic-ui-react";
 import { Redirect } from "react-router-dom";
 import kp from "./keypair.json";
@@ -79,6 +80,7 @@ function Stake() {
   const [formValues, setFormValues] = useState({
     mintTokens: "",
     depositTokens: "",
+    rewardTokens: ""
   });
   const [totalTokens, setTotalTokens] = useState(0);
   const [initialSignatories, setInitialSignatories] = useState([]);
@@ -89,6 +91,7 @@ function Stake() {
   const [selectedJob, setSelectedJob] = useState("");
   const [jobError, setJobError] = useState(true);
   const [applicationError, setApplicationError] = useState(true);
+  const [applicationState, setApplicationState] = useState("");
 
   // const {sendTransaction} = useWallet();
 
@@ -286,8 +289,7 @@ function Stake() {
     const jobProgram = new Program(job, jobProgramID, provider);
     const generalProgram = new Program(general, generalProgramID, provider);
 
-    console.log(wallet.toBase58())
-
+    console.log(wallet.toBase58());
 
     const jobAdId = selectedJob;
 
@@ -356,7 +358,6 @@ function Stake() {
         applicationProgram.programId
       );
 
-
     try {
       let tx = await applicationProgram.methods
         .initialize(
@@ -381,7 +382,7 @@ function Stake() {
     await getDetails(selectedApplication, selectedJob);
   };
 
-  const stakeApplication = async() => {
+  const stakeApplication = async () => {
     const provider = getProvider();
     const applicationProgram = new Program(
       application,
@@ -390,7 +391,11 @@ function Stake() {
     );
     const jobProgram = new Program(job, jobProgramID, provider);
     const generalProgram = new Program(general, generalProgramID, provider);
-    const candidateStakingProgram = new Program(candidateStaking, candidateStakingProgramID, provider);
+    const candidateStakingProgram = new Program(
+      candidateStaking,
+      candidateStakingProgramID,
+      provider
+    );
 
     const applicationId = selectedApplication;
     const jobAdId = selectedJob;
@@ -433,7 +438,8 @@ function Stake() {
 
     const [walletPDA, walletBump] =
       await anchor.web3.PublicKey.findProgramAddress(
-        [Buffer.from("wallet"), wallet.toBuffer()],
+        [Buffer.from("wallet"), Buffer.from(applicationId.substring(0, 18)),
+        Buffer.from(applicationId.substring(18, 36)),wallet.toBuffer()],
         candidateStakingProgram.programId
       );
 
@@ -450,10 +456,13 @@ function Stake() {
     const deposit = new anchor.BN(formValues.depositTokens);
 
     try {
-      const state = await candidateStakingProgram.account.candidateParameter.fetch(candidatePDA);
+      const state =
+        await candidateStakingProgram.account.candidateParameter.fetch(
+          candidatePDA
+        );
       console.log(state.stakedAmount);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       const tx = await candidateStakingProgram.methods
         .initialize(jobAdId, applicationId)
         .accounts({
@@ -471,38 +480,216 @@ function Stake() {
 
     try {
       const tx = await candidateStakingProgram.methods
-      .stake(
-        jobAdId,
-        applicationId,
-        candidateBump,
-        generalBump,
-        applicationBump,
-        jobBump,
-        walletBump,
-        deposit
-      )
+        .stake(
+          jobAdId,
+          applicationId,
+          candidateBump,
+          generalBump,
+          applicationBump,
+          jobBump,
+          walletBump,
+          deposit
+        )
+        .accounts({
+          baseAccount: candidatePDA,
+          authority: wallet,
+          tokenMint: USDCMint,
+          generalAccount: generalPDA,
+          // jobAccount: jobPDA,
+          applicationAccount: applicationPDA,
+          generalProgram: generalProgram.programId,
+          applicationProgram: applicationProgram.programId,
+          jobProgram: jobProgram.programId,
+          escrowWalletState: walletPDA,
+          walletToWithdrawFrom: userTokenAccount,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          tokenProgram: spl.TOKEN_PROGRAM_ID,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        })
+        .rpc();
+      await getBalance(wallet);
+      console.log(tx);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const updateState = async () => {
+    const provider = getProvider();
+    const applicationProgram = new Program(
+      application,
+      applicationProgramID,
+      provider
+    );
+
+    const applicationId = selectedApplication;
+
+    const [applicationPDA, applicationBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [
+          Buffer.from("application"),
+          Buffer.from(applicationId.substring(0, 18)),
+          Buffer.from(applicationId.substring(18, 36)),
+        ],
+        applicationProgram.programId
+      );
+
+    let state;
+
+    if (applicationState === "selected") {
+      state = { selected: {} };
+    } else if (applicationState === "rejected") {
+      state = { rejected: {} };
+    }
+
+    try {
+      const tx = await applicationProgram.methods
+        .updateStatus(applicationId, applicationBump, state)
+        .accounts({
+          baseAccount: applicationPDA,
+          authority: wallet,
+        })
+        .rpc();
+
+      state = await applicationProgram.account.applicationParameter.fetch(
+        applicationPDA
+      );
+
+      console.log(tx, state.status);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const unstake = async () => {
+    const provider = getProvider();
+    const applicationProgram = new Program(
+      application,
+      applicationProgramID,
+      provider
+    );
+    const jobProgram = new Program(job, jobProgramID, provider);
+    const generalProgram = new Program(general, generalProgramID, provider);
+    const candidateStakingProgram = new Program(
+      candidateStaking,
+      candidateStakingProgramID,
+      provider
+    );
+
+    const applicationId = selectedApplication;
+    const jobAdId = selectedJob;
+
+    const [generalPDA, generalBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [Buffer.from("general")],
+        generalProgram.programId
+      );
+
+    const [applicationPDA, applicationBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [
+          Buffer.from("application"),
+          Buffer.from(applicationId.substring(0, 18)),
+          Buffer.from(applicationId.substring(18, 36)),
+        ],
+        applicationProgram.programId
+      );
+
+    const [jobPDA, jobBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [
+        Buffer.from("jobfactory"),
+        Buffer.from(jobAdId.substring(0, 18)),
+        Buffer.from(jobAdId.substring(18, 36)),
+      ],
+      jobProgram.programId
+    );
+
+    const [candidatePDA, candidateBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [
+          Buffer.from("candidate"),
+          Buffer.from(applicationId.substring(0, 18)),
+          Buffer.from(applicationId.substring(18, 36)),
+          wallet.toBuffer(),
+        ],
+        candidateStakingProgram.programId
+      );
+
+    const [walletPDA, walletBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [Buffer.from("wallet"), Buffer.from(applicationId.substring(0, 18)),
+        Buffer.from(applicationId.substring(18, 36)), wallet.toBuffer()],
+        candidateStakingProgram.programId
+      );
+
+    const USDCMint = new PublicKey(tokenMint);
+
+    let userTokenAccount = await spl.getAssociatedTokenAddress(
+      USDCMint,
+      wallet,
+      false,
+      spl.TOKEN_PROGRAM_ID,
+      spl.ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+
+    try {
+      const tx = await candidateStakingProgram.methods
+      .unstake(candidateBump, applicationBump, walletBump, applicationId)
       .accounts({
         baseAccount: candidatePDA,
         authority: wallet,
         tokenMint: USDCMint,
-        generalAccount: generalPDA,
-        // jobAccount: jobPDA,
         applicationAccount: applicationPDA,
-        generalProgram: generalProgram.programId,
         applicationProgram: applicationProgram.programId,
-        jobProgram: jobProgram.programId,
         escrowWalletState: walletPDA,
-        walletToWithdrawFrom: userTokenAccount,
+        walletToDepositTo: userTokenAccount,
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: spl.TOKEN_PROGRAM_ID,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       })
       .rpc();
-      await getBalance(wallet);
+
       console.log(tx)
+      await getBalance(wallet)
     } catch (error) {
       console.log(error)
     }
+  };
+
+  const mintTokensForRewards = async() => {
+
+    const provider = getProvider();
+    const candidateStakingProgram = new Program(
+      candidateStaking,
+      candidateStakingProgramID,
+      provider
+    );
+
+    const applicationId = selectedApplication;
+
+    const [walletPDA, walletBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [Buffer.from("wallet"), Buffer.from(applicationId.substring(0, 18)),
+        Buffer.from(applicationId.substring(18, 36)), wallet.toBuffer()],
+        candidateStakingProgram.programId
+      );
+
+      const USDCMint = new PublicKey(tokenMint);
+
+      // let balance = await spl.getAccount(provider, walletPDA);
+      // console.log(balance.amount)
+
+      await spl.mintTo(
+        provider,
+        wallet,
+        USDCMint,
+        walletPDA,
+        baseAccount.publicKey,
+        formValues.rewardTokens
+      );
+
+      // balance = await spl.getAccount(provider, walletPDA);
+      // console.log(balance.amount)
   }
 
   const getDetails = async (appId, jobId) => {
@@ -551,10 +738,11 @@ function Stake() {
 
     if (jobs) {
       try {
-        const state = await applicationProgram.account.applicationParameter.fetch(
-          applicationPDA
-        );
-        setApplicationError(true)
+        const state =
+          await applicationProgram.account.applicationParameter.fetch(
+            applicationPDA
+          );
+        setApplicationError(true);
       } catch (error) {
         setApplicationError(false);
         console.log(error);
@@ -570,6 +758,10 @@ function Stake() {
     await getDetails(applicationId, jobId);
 
     console.log(applicationId, jobId);
+  };
+
+  const handleRadioChange = async (e, { value }) => {
+    setApplicationState(value);
   };
 
   return (
@@ -608,13 +800,10 @@ function Stake() {
           </Button>
           <Button onClick={updateTokenMint}>Update Token Mint</Button>
           <br /> <br />
-          <Button onClick={createJob}>
-            Create Job
-          </Button>
-          <Button onClick={createApplication}>
-            Create Application
-          </Button>
-          <br /><br />
+          <Button onClick={createJob}>Create Job</Button>
+          <Button onClick={createApplication}>Create Application</Button>
+          <br />
+          <br />
           <Form>
             <Form.Field>
               <label>Enter amount of tokens to mint</label>
@@ -635,7 +824,8 @@ function Stake() {
                 Mint Tokens
               </Button>
             )}
-            <br /><br />
+            <br />
+            <br />
             <Form.Field>
               <label>Enter amount of tokens to deposit</label>
               <input
@@ -647,22 +837,66 @@ function Stake() {
               />
             </Form.Field>
             {loading ? (
-              <Button loading color = "teal">
+              <Button loading color="teal">
                 Stake Tokens
               </Button>
             ) : (
-              <Button onClick={stakeApplication} color = "teal">
+              <Button onClick={stakeApplication} color="teal">
                 Stake Tokens
               </Button>
             )}
             <br />
             <br />
+            <Form.Group inline>
+              <label>Select Application Status</label>
+              <Form.Field
+                control={Radio}
+                label="Selected"
+                value="selected"
+                checked={applicationState === "selected"}
+                onChange={handleRadioChange}
+              />
+              <Form.Field
+                control={Radio}
+                label="Rejected"
+                value="rejected"
+                checked={applicationState === "rejected"}
+                onChange={handleRadioChange}
+              />
+            </Form.Group>
+            <Button onClick={updateState}>Update Application Status</Button>
+            <Button onClick={unstake} primary>Withdraw Rewards if any</Button>
+            <br /><br />
+            <Form.Field>
+              <label>Enter amount of tokens to mint to pay for rewards</label>
+              <input
+                placeholder="Enter amount of tokens"
+                type="number"
+                name="rewardTokens"
+                value={formValues.rewardTokens}
+                onChange={handleChange}
+              />
+            </Form.Field>
+            {loading ? (
+              <Button loading primary>
+                Mint Tokens
+              </Button>
+            ) : (
+              <Button onClick={mintTokensForRewards} primary>
+                Mint Tokens
+              </Button>
+            )}
             <Message color="teal">
               <Message.Header>Total Tokens: {totalTokens} </Message.Header>
             </Message>
-            {!selectedPresent && (<Message color="teal">
-              <Message.Header>Please click the application Id(in blue) below to start staking </Message.Header>
-            </Message>) }
+            {!selectedPresent && (
+              <Message color="teal">
+                <Message.Header>
+                  Please click the application Id(in blue) below to start
+                  staking{" "}
+                </Message.Header>
+              </Message>
+            )}
             {selectedPresent && (
               <Message color="teal">
                 <Message.Header>
@@ -693,8 +927,10 @@ function Stake() {
                   </Message.Header>
                 </Message>
               ))}
-              <Header as="h2">Jobs and applications</Header>
-              <Header as="h4">Click on the application id below to start staking</Header>
+            <Header as="h2">Jobs and applications</Header>
+            <Header as="h4">
+              Click on the application id below to start staking
+            </Header>
             {data.jobs.map((job, index) => {
               return (
                 <List ordered>

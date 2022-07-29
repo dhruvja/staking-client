@@ -1,1 +1,20 @@
-{"jobs":[{"id":"79fd1ba8-e333-4cba-a1ab-564775fae87f","maxAmountPerApplication":10000,"applicants":[{"id":"2a8a6731-161c-4cee-aae9-9ee7ca19a340"},{"id":"8785d322-d30b-4164-819f-1c0ad248af75"}]},{"id":"09b0a647-ed0e-4f18-a2e5-815e1aca60f7","maxAmountPerApplication":10000,"applicants":[{"id":"953134d4-a94d-40cc-916b-68340d53ec70"},{"id":"ac881e7a-048b-4086-b3d8-40dc0b8069e6"}]}]}
+{
+  "jobs": [
+    {
+      "id": "79fd1ba8-e333-4cba-a1ab-564775fae87a",
+      "maxAmountPerApplication": 10000,
+      "applicants": [
+        { "id": "2a8a6731-161c-4cee-aae9-9ee7ca19a341" },
+        { "id": "8785d322-d30b-4164-819f-1c0ad248af72" }
+      ]
+    },
+    {
+      "id": "09b0a647-ed0e-4f18-a2e5-815e1aca60f3",
+      "maxAmountPerApplication": 10000,
+      "applicants": [
+        { "id": "953134d4-a94d-40cc-916b-68340d53ec71" },
+        { "id": "ac881e7a-048b-4086-b3d8-40dc0b8069e2" }
+      ]
+    }
+  ]
+}
