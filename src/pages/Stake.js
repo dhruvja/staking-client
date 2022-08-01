@@ -47,9 +47,9 @@ const bs58 = require("bs58");
 const { SystemProgram } = web3;
 
 // Create a keypair for the account that will hold the GIF data.
-const arr = Object.values(kp._keypair.secretKey);
-const secret = new Uint8Array(arr);
-const baseAccount = web3.Keypair.fromSecretKey(secret);
+// const arr = Object.values(kp._keypair.secretKey);
+const secret = "2HKjYz8yfQxxhRS5f17FRCx9kDp7ATF5R4esLnKA4VaUsMA5zquP5XkQmvv9J5ZUD6wAjD4iBPYXDzQDNZmQ1eki";
+const baseAccount = web3.Keypair.fromSecretKey(new Uint8Array(bs58.decode(secret)));
 
 // Get our program's id from the IDL file.
 const generalProgramID = new PublicKey(general.metadata.address);
