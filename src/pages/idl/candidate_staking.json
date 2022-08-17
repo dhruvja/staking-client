@@ -11,6 +11,11 @@
           "isSigner": false
         },
         {
+          "name": "jobAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "escrowWalletState",
           "isMut": true,
           "isSigner": false
@@ -24,6 +29,11 @@
           "name": "authority",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "jobProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "systemProgram",
@@ -49,6 +59,10 @@
         {
           "name": "applicationId",
           "type": "string"
+        },
+        {
+          "name": "jobBump",
+          "type": "u8"
         }
       ]
     },
@@ -72,6 +86,11 @@
         },
         {
           "name": "generalAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "jobAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -119,6 +138,11 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "instruction",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -152,7 +176,7 @@
         },
         {
           "name": "amount",
-          "type": "u32"
+          "type": "u64"
         }
       ]
     },
@@ -161,6 +185,11 @@
       "accounts": [
         {
           "name": "baseAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "jobAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -195,6 +224,11 @@
           "isSigner": false
         },
         {
+          "name": "jobProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -206,6 +240,11 @@
         },
         {
           "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instruction",
           "isMut": false,
           "isSigner": false
         }
@@ -226,6 +265,14 @@
         {
           "name": "applicationId",
           "type": "string"
+        },
+        {
+          "name": "jobAdId",
+          "type": "string"
+        },
+        {
+          "name": "jobBump",
+          "type": "u8"
         }
       ]
     }
@@ -242,11 +289,11 @@
           },
           {
             "name": "stakedAmount",
-            "type": "u32"
+            "type": "u64"
           },
           {
             "name": "rewardAmount",
-            "type": "u32"
+            "type": "u64"
           }
         ]
       }
@@ -272,6 +319,21 @@
       "code": 6003,
       "name": "SelectedButCantTransfer",
       "msg": "The staked application is selected but u would have to wait before u can withdraw"
+    },
+    {
+      "code": 6004,
+      "name": "StakeAmountOverflow",
+      "msg": "Stake amount overflow"
+    },
+    {
+      "code": 6005,
+      "name": "RewardAmountOverflow",
+      "msg": "Reward amount overflow"
+    },
+    {
+      "code": 6006,
+      "name": "AlreadyUnstaked",
+      "msg": "You have already unstaked"
     }
   ],
   "metadata": {

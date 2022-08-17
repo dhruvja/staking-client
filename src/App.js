@@ -8,7 +8,7 @@ function App() {
     <div className="App">
       <Router>
         <Switch>
-            <Route path="/" component={Stake} />
+            <Route path="/:job/:application" component={Stake} />
         </Switch>
       </Router>
     </div>

@@ -46,7 +46,7 @@
         },
         {
           "name": "maxAllowedStake",
-          "type": "u32"
+          "type": "u64"
         }
       ]
     },
@@ -62,6 +62,21 @@
           "name": "authority",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "jobAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "jobProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instruction",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -74,10 +89,56 @@
           "type": "u8"
         },
         {
+          "name": "jobId",
+          "type": "string"
+        },
+        {
+          "name": "jobBump",
+          "type": "u8"
+        },
+        {
           "name": "status",
           "type": {
             "defined": "JobStatus"
           }
+        }
+      ]
+    },
+    {
+      "name": "updateStakeAmount",
+      "accounts": [
+        {
+          "name": "baseAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "instruction",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "applicationId",
+          "type": "string"
+        },
+        {
+          "name": "applicationBump",
+          "type": "u8"
+        },
+        {
+          "name": "stakeAmount",
+          "type": "u64"
+        },
+        {
+          "name": "rewardAmount",
+          "type": "u64"
         }
       ]
     }
@@ -100,11 +161,19 @@
           },
           {
             "name": "stakedAmount",
-            "type": "u32"
+            "type": "u64"
           },
           {
             "name": "maxAllowedStaked",
-            "type": "u32"
+            "type": "u64"
+          },
+          {
+            "name": "totalRewardAmount",
+            "type": "u64"
+          },
+          {
+            "name": "updateRewardValueInJob",
+            "type": "bool"
           }
         ]
       }
@@ -135,13 +204,18 @@
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidAuthority",
-      "msg": "You dont have the authority to create the application"
+      "name": "AmountUnderflow",
+      "msg": "Amount underflowed"
     },
     {
       "code": 6001,
-      "name": "InvalidStatus",
-      "msg": "Invalid status value"
+      "name": "StatusNotPending",
+      "msg": "Status isn't Pending"
+    },
+    {
+      "code": 6002,
+      "name": "NotEnoughStakeAvailable",
+      "msg": "Staking available is less than what the user wants to stake"
     }
   ],
   "metadata": {

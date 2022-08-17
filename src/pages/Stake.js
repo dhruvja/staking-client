@@ -69,7 +69,7 @@ const opts = {
 
 const connection = new Connection(network, opts.preflightCommitment);
 
-function Stake() {
+function Stake(props) {
   const [wallet, setWallet] = useState(null);
   const [loading, setLoading] = useState(false);
   const [present, setPresent] = useState(false);
@@ -80,7 +80,7 @@ function Stake() {
   const [formValues, setFormValues] = useState({
     mintTokens: "",
     depositTokens: "",
-    rewardTokens: ""
+    rewardTokens: "",
   });
   const [totalTokens, setTotalTokens] = useState(0);
   const [initialSignatories, setInitialSignatories] = useState([]);
@@ -92,6 +92,7 @@ function Stake() {
   const [jobError, setJobError] = useState(true);
   const [applicationError, setApplicationError] = useState(true);
   const [applicationState, setApplicationState] = useState("");
+  const [totalRewardToBeGiven, setTotalRewardToBeGiven] = useState(0);
 
   // const {sendTransaction} = useWallet();
 
@@ -147,6 +148,11 @@ function Stake() {
   useEffect(() => {
     const onLoad = async () => {
       await checkSolanaWalletExists();
+      setSelectedApplication(props.match.params.application);
+      setSelectedJob(props.match.params.job);
+      setJobIndex(0);
+      setSelectedPresent(true);
+      await getDetails(props.match.params.application, props.match.params.job);
     };
     window.addEventListener("load", onLoad);
 
@@ -180,7 +186,7 @@ function Stake() {
         tokenMintKey,
         userTokenAccount,
         baseAccount.publicKey,
-        formValues.mintTokens,
+        parseInt(formValues.mintTokens * 1000000),
         [],
         spl.TOKEN_PROGRAM_ID
       )
@@ -438,8 +444,12 @@ function Stake() {
 
     const [walletPDA, walletBump] =
       await anchor.web3.PublicKey.findProgramAddress(
-        [Buffer.from("wallet"), Buffer.from(applicationId.substring(0, 18)),
-        Buffer.from(applicationId.substring(18, 36)),wallet.toBuffer()],
+        [
+          Buffer.from("wallet"),
+          Buffer.from(applicationId.substring(0, 18)),
+          Buffer.from(applicationId.substring(18, 36)),
+          wallet.toBuffer(),
+        ],
         candidateStakingProgram.programId
       );
 
@@ -617,8 +627,12 @@ function Stake() {
 
     const [walletPDA, walletBump] =
       await anchor.web3.PublicKey.findProgramAddress(
-        [Buffer.from("wallet"), Buffer.from(applicationId.substring(0, 18)),
-        Buffer.from(applicationId.substring(18, 36)), wallet.toBuffer()],
+        [
+          Buffer.from("wallet"),
+          Buffer.from(applicationId.substring(0, 18)),
+          Buffer.from(applicationId.substring(18, 36)),
+          wallet.toBuffer(),
+        ],
         candidateStakingProgram.programId
       );
 
@@ -634,30 +648,29 @@ function Stake() {
 
     try {
       const tx = await candidateStakingProgram.methods
-      .unstake(candidateBump, applicationBump, walletBump, applicationId)
-      .accounts({
-        baseAccount: candidatePDA,
-        authority: wallet,
-        tokenMint: USDCMint,
-        applicationAccount: applicationPDA,
-        applicationProgram: applicationProgram.programId,
-        escrowWalletState: walletPDA,
-        walletToDepositTo: userTokenAccount,
-        systemProgram: anchor.web3.SystemProgram.programId,
-        tokenProgram: spl.TOKEN_PROGRAM_ID,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-      })
-      .rpc();
+        .unstake(candidateBump, applicationBump, walletBump, applicationId)
+        .accounts({
+          baseAccount: candidatePDA,
+          authority: wallet,
+          tokenMint: USDCMint,
+          applicationAccount: applicationPDA,
+          applicationProgram: applicationProgram.programId,
+          escrowWalletState: walletPDA,
+          walletToDepositTo: userTokenAccount,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          tokenProgram: spl.TOKEN_PROGRAM_ID,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        })
+        .rpc();
 
-      console.log(tx)
-      await getBalance(wallet)
+      console.log(tx);
+      await getBalance(wallet);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
 
-  const mintTokensForRewards = async() => {
-
+  const mintTokensForRewards = async () => {
     const provider = getProvider();
     const candidateStakingProgram = new Program(
       candidateStaking,
@@ -669,28 +682,107 @@ function Stake() {
 
     const [walletPDA, walletBump] =
       await anchor.web3.PublicKey.findProgramAddress(
-        [Buffer.from("wallet"), Buffer.from(applicationId.substring(0, 18)),
-        Buffer.from(applicationId.substring(18, 36)), wallet.toBuffer()],
+        [
+          Buffer.from("wallet"),
+          Buffer.from(applicationId.substring(0, 18)),
+          Buffer.from(applicationId.substring(18, 36)),
+          wallet.toBuffer(),
+        ],
         candidateStakingProgram.programId
       );
 
-      const USDCMint = new PublicKey(tokenMint);
+    const USDCMint = new PublicKey(tokenMint);
 
-      // let balance = await spl.getAccount(provider, walletPDA);
-      // console.log(balance.amount)
+    // let balance = await spl.getAccount(provider, walletPDA);
+    // console.log(balance.amount)
 
-      await spl.mintTo(
-        provider,
-        wallet,
-        USDCMint,
-        walletPDA,
-        baseAccount.publicKey,
-        formValues.rewardTokens
+    await spl.mintTo(
+      provider,
+      wallet,
+      USDCMint,
+      walletPDA,
+      baseAccount.publicKey,
+      formValues.rewardTokens
+    );
+
+    // balance = await spl.getAccount(provider, walletPDA);
+    // console.log(balance.amount)
+  };
+
+  const transferTokenToAccount = async () => {
+    const provider = getProvider();
+    const candidateStakingProgram = new Program(
+      candidateStaking,
+      candidateStakingProgramID,
+      provider
+    );
+
+    const applicationId = selectedApplication;
+    const jobAdId = selectedJob;
+
+    const [walletPDA, walletBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [
+          Buffer.from("wallet"),
+          Buffer.from(jobAdId.substring(0, 18)),
+          Buffer.from(jobAdId.substring(18, 36)),
+        ],
+        candidateStakingProgramID
       );
 
-      // balance = await spl.getAccount(provider, walletPDA);
-      // console.log(balance.amount)
-  }
+    const [jobPDA, jobBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [
+        Buffer.from("jobfactory"),
+        Buffer.from(
+          jobAdId.substring(0, 18),
+          Buffer.from(jobAdId.substring(18, 36))
+        ),
+      ],
+      jobProgramID
+    );
+
+    let recentBlockhash = await connection.getRecentBlockhash();
+    let manualTransaction = new Transaction({
+      recentBlockhash: recentBlockhash.blockhash,
+      feePayer: wallet,
+    });
+
+    const PDABalance = await spl.getAccount(connection, walletPDA);
+    console.log(PDABalance.amount.toString());
+    const amount = Math.abs(totalRewardToBeGiven - parseInt(PDABalance.amount))
+
+
+    const tokenMintKey = new anchor.web3.PublicKey(tokenMint);
+
+    let userTokenAccount = await spl.getAssociatedTokenAddress(
+      tokenMintKey,
+      wallet,
+      false,
+      spl.TOKEN_PROGRAM_ID,
+      spl.ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+
+    console.log(amount)
+
+    manualTransaction.add(
+      spl.createTransferInstruction(
+        userTokenAccount,
+        walletPDA,
+        wallet, 
+        amount
+      )
+    );
+    let sign = await window.solana.signTransaction(manualTransaction);
+    let signature = await connection.sendRawTransaction(sign.serialize());
+    let result = await connection.confirmTransaction(
+      signature,
+      "myFirstTransaction"
+    );
+    console.log("sent money", result);
+    alert("Tipped Successfully");
+    setLoading(false);
+    await getBalance();
+  };
 
   const getDetails = async (appId, jobId) => {
     const provider = getProvider();
@@ -729,6 +821,8 @@ function Stake() {
 
     try {
       const state = await jobProgram.account.jobStakingParameter.fetch(jobPDA);
+      setTotalRewardToBeGiven(state.totalRewardToBeGiven.toNumber());
+      console.log(state);
       setJobError(true);
     } catch (error) {
       jobs = false;
@@ -742,6 +836,7 @@ function Stake() {
           await applicationProgram.account.applicationParameter.fetch(
             applicationPDA
           );
+        console.log(state);
         setApplicationError(true);
       } catch (error) {
         setApplicationError(false);
@@ -827,6 +922,27 @@ function Stake() {
             <br />
             <br />
             <Form.Field>
+              <label>Enter amount of tokens to transfer</label>
+              <input
+                placeholder="Enter amount of tokens"
+                type="number"
+                name="depositTokens"
+                value={formValues.depositTokens}
+                onChange={handleChange}
+              />
+            </Form.Field>
+            {loading ? (
+              <Button loading primary>
+                Transfer Tokens
+              </Button>
+            ) : (
+              <Button onClick={transferTokenToAccount} primary>
+                Transfer Tokens
+              </Button>
+            )}
+            <br />
+            <br />
+            {/* <Form.Field>
               <label>Enter amount of tokens to deposit</label>
               <input
                 placeholder="Enter amount of tokens"
@@ -885,9 +1001,19 @@ function Stake() {
               <Button onClick={mintTokensForRewards} primary>
                 Mint Tokens
               </Button>
+            )} */}
+            {jobError && (
+              <Message color="teal">
+                {/* <Message.Header>Job Status: {allData.status}</Message.Header> */}
+                <Message.Header>
+                  Total Balance to be present: {totalRewardToBeGiven}
+                </Message.Header>
+              </Message>
             )}
             <Message color="teal">
-              <Message.Header>Total Tokens: {totalTokens} </Message.Header>
+              <Message.Header>
+                Total Tokens: {parseInt(totalTokens / 1000000)}{" "}
+              </Message.Header>
             </Message>
             {!selectedPresent && (
               <Message color="teal">
@@ -927,8 +1053,8 @@ function Stake() {
                   </Message.Header>
                 </Message>
               ))}
-            <Header as="h2">Jobs and applications</Header>
-            <Header as="h4">
+            {/* <Header as="h2">Jobs and applications</Header> */}
+            {/* <Header as="h4">
               Click on the application id below to start staking
             </Header>
             {data.jobs.map((job, index) => {
@@ -949,7 +1075,7 @@ function Stake() {
                   })}
                 </List>
               );
-            })}
+            })} */}
           </Form>
         </Segment>
       </div>

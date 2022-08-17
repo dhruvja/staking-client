@@ -42,7 +42,109 @@
         },
         {
           "name": "maxAmountPerApplication",
-          "type": "u32"
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "updateRewards",
+      "accounts": [
+        {
+          "name": "jobAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "jobAdId",
+          "type": "string"
+        },
+        {
+          "name": "jobBump",
+          "type": "u8"
+        },
+        {
+          "name": "rewardAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "unstake",
+      "accounts": [
+        {
+          "name": "jobAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "escrowWalletState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "walletToDepositTo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "jobAdId",
+          "type": "string"
+        },
+        {
+          "name": "jobBump",
+          "type": "u8"
+        },
+        {
+          "name": "walletBump",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
         }
       ]
     }
@@ -63,7 +165,31 @@
           },
           {
             "name": "maxAmountPerApplication",
-            "type": "u32"
+            "type": "u64"
+          },
+          {
+            "name": "totalRewardToBeGiven",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CandidateParameter",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "stakedAmount",
+            "type": "u64"
+          },
+          {
+            "name": "rewardAmount",
+            "type": "u64"
           }
         ]
       }
@@ -74,6 +200,16 @@
       "code": 6000,
       "name": "InvalidAuthority",
       "msg": "You dont have the authority to create the job"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidCall",
+      "msg": "You dont have the permission to call this"
+    },
+    {
+      "code": 6002,
+      "name": "TotalRewardAmountOverflow",
+      "msg": "Total reward amount overflow"
     }
   ],
   "metadata": {
